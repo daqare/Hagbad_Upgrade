@@ -13,7 +13,7 @@ import { AreaFlow, DualBar } from '../components/Charts';
 import { SomaliPattern } from '../components/SomaliPattern';
 import QardHasanModal from '../components/QardHasanModal';
 import ProUpgradeModal from '../components/ProUpgradeModal';
-
+import BusinessLedgerModal from '../components/BusinessLedgerModal';
 const MONTHLY = [
   { m: 'Mar', amount: 320 }, { m: 'Apr', amount: 380 }, { m: 'May', amount: 340 },
   { m: 'Jun', amount: 460 }, { m: 'Jul', amount: 420 }, { m: 'Aug', amount: 510 },
@@ -25,6 +25,7 @@ const CASHFLOW = [
 ];
 
 export default function Dashboard() {
+  const [showBusiness, setShowBusiness] = useState(false);
   const [showPro, setShowPro] = useState(false);
   const { state, dispatch } = useApp();
   const nav = useNavigate();
@@ -125,6 +126,22 @@ export default function Dashboard() {
           <button onClick={() => dispatch({ type: 'SET_PRO', payload: false })} className="ml-auto text-[10px] text-teal-600 underline">Reset Demo</button>
         </div>
       )}
+            {/* HAGBAD BUSINESS BUTTON */}
+      <button 
+        onClick={() => setShowBusiness(true)} 
+        className="w-full p-4 rounded-2xl bg-gradient-to-r from-forest-900 to-teal-900 text-white flex items-center justify-between shadow-lg hover:shadow-xl transition"
+      >
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-white/20 backdrop-blur-sm grid place-items-center">
+            <TrendingUp className="h-5 w-5 text-gold-400" />
+          </div>
+          <div className="text-left">
+            <p className="font-display font-bold text-sm">Hagbad Business</p>
+            <p className="text-[10px] text-white/70">Track sales & send invoices</p>
+          </div>
+        </div>
+        <ChevronRight className="h-5 w-5 text-white/50" />
+      </button>
       {/* 3. QUICK ACTIONS GRID */}
       <div className="grid grid-cols-4 gap-3">
         {[
@@ -271,6 +288,7 @@ export default function Dashboard() {
       </Card>
       {showLoan && <QardHasanModal onClose={() => setShowLoan(false)} />}
       {showPro && <ProUpgradeModal onClose={() => setShowPro(false)} />}
+      {showBusiness && <BusinessLedgerModal onClose={() => setShowBusiness(false)} />}
     </div>
   );
 }
