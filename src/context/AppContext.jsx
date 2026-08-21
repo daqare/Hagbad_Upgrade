@@ -28,6 +28,38 @@ function reducer(state, action) {
     case 'TRUST': {
       const score = Math.max(0, Math.min(900, state.trust.score + action.delta));
       return { ...state, trust: { ...state.trust, score, level: trustLevel(score), history: [...state.trust.history, { date: new Date().toISOString(), score }].slice(-24) } };
+    }    case 'SEND_MONEY': {
+      const { amount, fee, recipient, provider, purpose, isSmartSend, smartCategory } = action.payload;
+      const totalDeduction = +(amount + fee).toFixed(2);
+      const newBalance = +(state.wallet.balance - totalDeduction).toFixed(2);
+      
+      const newTxn = { 
+        id: uid('tx'), type: 'send', amount: -totalDeduction, 
+        recipient, provider, purpose, isSmartSend, smartCategory,
+        date: new Date().toISOString(), ref: txnRef(), status: 'success' 
+      };
+      
+      return {
+        ...state,
+        wallet: { ...state.wallet, balance: newBalance, totalSent: state.wallet.totalSent + totalDeduction },
+        transactions: [newTxn, ...state.transactions],
+        trust: { ...state.trust, score: Math.min(900, state.trust.score + 2) } // Bonus for successful sends
+      };
+    }
+    case 'PAY_BILL': {
+      const { amount, provider, category } = action.payload;
+      const newBalance = +(state.wallet.balance - amount).toFixed(2);
+      
+      const newTxn = { 
+        id: uid('tx'), type: 'bill_pay', amount: -amount, 
+        provider, category, date: new Date().toISOString(), ref: txnRef(), status: 'success' 
+      };
+      
+      return {
+        ...state,
+        wallet: { ...state.wallet, balance: newBalance },
+        transactions: [newTxn, ...state.transactions]
+      };
     }
     case 'ADD_SAVINGS': return { ...state, savingsAccounts: [action.account, ...state.savingsAccounts] };
     case 'UPDATE_SAVINGS': return { ...state, savingsAccounts: state.savingsAccounts.map((s) => (s.id === action.id ? { ...s, ...action.patch } : s)) };
