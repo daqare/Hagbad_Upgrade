@@ -2,28 +2,28 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   TrendingUp, TrendingDown, DollarSign, Plus, X, 
-  LayoutDashboard, List, Tag, Briefcase, CheckCircle 
+  LayoutDashboard, List, Tag, Briefcase, MessageCircle 
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { fmtMoney } from '../utils/format';
-import { Button, Badge } from './ui';
+import { Button } from './ui';
 
 const INCOME_CATEGORIES = ['Product Sales', 'Services', 'Consulting', 'Investments', 'Other Income'];
 const EXPENSE_CATEGORIES = ['Inventory/Stock', 'Rent', 'Utilities', 'Salaries', 'Transport', 'Marketing', 'Other Expense'];
 
 export default function BusinessLedgerModal({ onClose }) {
   const { state, dispatch, toast } = useApp();
-  const [tab, setTab] = useState('overview'); // 'overview', 'add', 'history'
+  const [tab, setTab] = useState('overview'); 
   const [formData, setFormData] = useState({ 
     type: 'income', 
     category: 'Product Sales', 
     amount: '', 
-    description: '' 
+    description: '',
+    customerPhone: '' 
   });
 
   const ledger = state.businessLedger || [];
   
-  // Calculations
   const totalIncome = ledger.filter(t => t.type === 'income').reduce((acc, curr) => acc + Number(curr.amount), 0);
   const totalExpenses = ledger.filter(t => t.type === 'expense').reduce((acc, curr) => acc + Number(curr.amount), 0);
   const netProfit = totalIncome - totalExpenses;
@@ -31,21 +31,36 @@ export default function BusinessLedgerModal({ onClose }) {
   const handleAdd = () => {
     if (!formData.amount) return;
     
+    // 1. Save to Ledger
     dispatch({ 
       type: 'ADD_BUSINESS_TXN', 
       payload: { 
-        name: formData.category, // Using category as the main label for the list
+        name: formData.category, 
         amount: Number(formData.amount), 
         type: formData.type,
         category: formData.category,
         description: formData.description,
+        customerPhone: formData.customerPhone,
         status: 'completed'
       } 
     });
     
-    toast('Recorded!', `${formData.type === 'income' ? 'Income' : 'Expense'} of ${fmtMoney(formData.amount)} added.`);
-    setFormData({ type: 'income', category: 'Product Sales', amount: '', description: '' });
-    setTab('history'); // Switch to history to see it
+    // 2. WhatsApp Invoicing Logic (If it's a sale/income and phone is provided)
+    if (formData.type === 'income' && formData.customerPhone) {
+      const message = `Hello! Here is your invoice from Hagbad Business for ${fmtMoney(formData.amount)} (${formData.category}). You can pay securely via the Hagbad App.`;
+      const cleanPhone = formData.customerPhone.replace(/\D/g, ''); // Remove non-numbers
+      const waLink = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+      
+      // Open WhatsApp in a new tab
+      window.open(waLink, '_blank');
+      toast('Invoice Sent!', `WhatsApp opened for ${formData.customerPhone}`);
+    } else {
+      toast('Recorded!', `${formData.type === 'income' ? 'Income' : 'Expense'} of ${fmtMoney(formData.amount)} added.`);
+    }
+
+    // Reset and go to history
+    setFormData({ type: 'income', category: 'Product Sales', amount: '', description: '', customerPhone: '' });
+    setTab('history'); 
   };
 
   return (
@@ -66,7 +81,7 @@ export default function BusinessLedgerModal({ onClose }) {
             </div>
             <div>
               <h2 className="font-display text-2xl font-bold">Hagbad Business Pro</h2>
-              <p className="text-xs text-white/70">Income, Expenses & Profit Tracking</p>
+              <p className="text-xs text-white/70">Income, Expenses & WhatsApp Invoicing</p>
             </div>
           </div>
         </div>
@@ -113,20 +128,16 @@ export default function BusinessLedgerModal({ onClose }) {
                   <p className={`font-display text-2xl font-bold ${netProfit >= 0 ? 'text-gold-600' : 'text-coral-600'}`}>{fmtMoney(netProfit)}</p>
                 </div>
               </div>
-              
-              <div className="text-center py-8 text-forest-700/50">
-                <p>Use the "Add Transaction" tab to record your daily business activity.</p>
-              </div>
             </div>
           )}
 
           {/* ADD TRANSACTION TAB */}
           {tab === 'add' && (
-            <div className="max-w-lg mx-auto space-y-6">
+            <div className="max-w-lg mx-auto space-y-5">
               {/* Type Toggle */}
               <div className="flex gap-2 bg-black/5 dark:bg-white/5 p-1 rounded-xl">
                 <button onClick={() => setFormData({...formData, type: 'income', category: 'Product Sales'})} className={`flex-1 py-3 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 ${formData.type === 'income' ? 'bg-forest-600 text-white shadow-md' : 'text-forest-700/60'}`}>
-                  <TrendingUp className="h-4 w-4" /> Income
+                  <TrendingUp className="h-4 w-4" /> Income (Sale)
                 </button>
                 <button onClick={() => setFormData({...formData, type: 'expense', category: 'Inventory/Stock'})} className={`flex-1 py-3 rounded-lg text-sm font-bold transition flex items-center justify-center gap-2 ${formData.type === 'expense' ? 'bg-coral-600 text-white shadow-md' : 'text-forest-700/60'}`}>
                   <TrendingDown className="h-4 w-4" /> Expense
@@ -170,12 +181,34 @@ export default function BusinessLedgerModal({ onClose }) {
                   value={formData.description} 
                   onChange={(e) => setFormData({...formData, description: e.target.value})} 
                   className="w-full p-3 rounded-xl border border-forest-200 dark:border-white/10 bg-transparent text-forest-900 dark:text-sand-50 focus:border-gold-500 focus:outline-none" 
-                  placeholder="e.g., Sold 50kg rice to Ahmed" 
+                  placeholder="e.g., Sold 50kg rice" 
                 />
               </div>
 
-              <Button variant="gold" size="lg" className="w-full" onClick={handleAdd} disabled={!formData.amount}>
-                Save Transaction
+              {/* CUSTOMER PHONE (NEW FOR WHATSAPP) */}
+              {formData.type === 'income' && (
+                <div>
+                  <label className="text-sm font-semibold mb-2 block text-forest-800 dark:text-sand-100">Customer Phone (for WhatsApp Invoice)</label>
+                  <div className="relative">
+                    <MessageCircle className="absolute left-3 top-3.5 h-5 w-5 text-forest-700/40" />
+                    <input 
+                      type="tel" 
+                      value={formData.customerPhone} 
+                      onChange={(e) => setFormData({...formData, customerPhone: e.target.value})} 
+                      className="w-full pl-10 pr-4 py-3 rounded-xl border border-forest-200 dark:border-white/10 bg-transparent text-forest-900 dark:text-sand-50 focus:border-gold-500 focus:outline-none" 
+                      placeholder="+252 61 XXX XXXX" 
+                    />
+                  </div>
+                  <p className="text-[10px] text-forest-700/50 mt-1 ml-1">Leave blank to just record the sale. Enter number to auto-send invoice.</p>
+                </div>
+              )}
+
+              <Button variant="gold" size="lg" className="w-full flex items-center justify-center gap-2" onClick={handleAdd} disabled={!formData.amount}>
+                {formData.type === 'income' && formData.customerPhone ? (
+                  <> <MessageCircle className="h-4 w-4" /> Save & Send WhatsApp Invoice </>
+                ) : (
+                  'Save Transaction'
+                )}
               </Button>
             </div>
           )}
