@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Smartphone, Zap, CheckCircle2, Loader2 } from 'lucide-react';
+import { Smartphone, Zap, CheckCircle2, Loader2, FileText, Share2 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { fmtMoney } from '../utils/format';
 import { Button, Card } from './ui';
@@ -24,10 +24,12 @@ export default function SendMoneyForm() {
     type: 'p2p', 
     smartCategory: '' 
   });
+  const [receiptData, setReceiptData] = useState(null);
   
   const amount = parseFloat(formData.amount) || 0;
   const fee = amount > 0 ? Math.max(0.50, Math.min(5.00, amount * 0.015)) : 0;
   const total = amount + fee;
+  const mockFxRate = 570.25; // Mock exchange rate for investor demo
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -37,137 +39,119 @@ export default function SendMoneyForm() {
     }
     setStep(2);
     setTimeout(() => {
+      const refId = 'HGB-' + Math.floor(Math.random() * 900000 + 100000);
+      
       if (formData.type === 'p2p') {
-        dispatch({ 
-          type: 'SEND_MONEY', 
-          payload: { 
-            amount, 
-            fee, 
-            recipient: formData.phone, 
-            provider: formData.provider, 
-            purpose: 'P2P Transfer', 
-            isSmartSend: false, 
-            smartCategory: '' 
-          } 
-        });
+        dispatch({ type: 'SEND_MONEY', payload: { amount, fee, recipient: formData.phone, provider: formData.provider, purpose: 'P2P Transfer', isSmartSend: false, smartCategory: '' } });
       } else if (formData.type === 'smart') {
-        dispatch({ 
-          type: 'SEND_MONEY', 
-          payload: { 
-            amount, 
-            fee, 
-            recipient: formData.phone, 
-            provider: formData.provider, 
-            purpose: 'Smart Send', 
-            isSmartSend: true, 
-            smartCategory: formData.smartCategory 
-          } 
-        });
+        dispatch({ type: 'SEND_MONEY', payload: { amount, fee, recipient: formData.phone, provider: formData.provider, purpose: 'Smart Send', isSmartSend: true, smartCategory: formData.smartCategory } });
       } else {
-        dispatch({ 
-          type: 'PAY_BILL', 
-          payload: { 
-            amount, 
-            provider: formData.provider, 
-            category: formData.smartCategory 
-          } 
-        });
+        dispatch({ type: 'PAY_BILL', payload: { amount, provider: formData.provider, category: formData.smartCategory } });
       }
+      
+      setReceiptData({ refId, date: new Date().toLocaleString() });
       toast('Transfer Successful', `Sent ${fmtMoney(amount)} to ${formData.phone}`);
       setStep(3);
     }, 2000);
   };
 
+  // --- LOADING STATE ---
   if (step === 2) {
     return (
       <Card className="p-8 text-center max-w-md mx-auto">
         <Loader2 className="h-10 w-10 mx-auto animate-spin text-gold-500" />
-        <h3 className="mt-4 font-display text-xl font-bold">Processing Transfer...</h3>
-        <p className="text-sm text-forest-700/60 mt-2">Simulating secure mobile money handshake.</p>
+        <h3 className="mt-4 font-display text-xl font-bold text-forest-900 dark:text-sand-50">Processing Transfer...</h3>
+        <p className="text-sm text-forest-700/60 mt-2">Securely connecting to {PROVIDERS.find(p => p.id === formData.provider)?.name}.</p>
       </Card>
     );
   }
 
-  if (step === 3) {
+  // --- SUCCESS / RECEIPT STATE (The Investor Pitch!) ---
+  if (step === 3 && receiptData) {
     return (
-      <Card className="p-8 text-center max-w-md mx-auto">
-        <motion.div 
-          initial={{ scale: 0 }} 
-          animate={{ scale: 1 }} 
-          className="h-16 w-16 mx-auto rounded-full bg-forest-100 dark:bg-forest-800/40 grid place-items-center text-forest-600"
-        >
-          <CheckCircle2 className="h-8 w-8" />
-        </motion.div>
-        <h3 className="mt-4 font-display text-2xl font-bold">Transfer Complete!</h3>
-        <div className="mt-6 rounded-2xl border border-dashed border-forest-300 dark:border-white/20 p-5 text-left space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span className="text-forest-700/60">Amount Sent</span>
-            <b>{fmtMoney(amount)}</b>
-          </div>
-          <div className="flex justify-between">
-            <span className="text-forest-700/60">Service Fee (Ujrah)</span>
-            <b>{fmtMoney(fee)}</b>
-          </div>
-          <div className="flex justify-between border-t pt-2 mt-2">
-            <span className="font-semibold">Total Deducted</span>
-            <b className="text-gold-600">{fmtMoney(total)}</b>
-          </div>
-          {formData.type === 'smart' && (
-            <div className="flex justify-between text-teal-600">
-              <span>Restricted to:</span>
-              <b>{formData.smartCategory}</b>
-            </div>
-          )}
+      <Card className="p-0 max-w-md mx-auto overflow-hidden">
+        {/* Receipt Header */}
+        <div className="bg-gradient-to-r from-forest-900 to-teal-900 p-6 text-center text-white relative">
+          <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 12 }} className="h-14 w-14 mx-auto rounded-full bg-white/20 backdrop-blur-sm grid place-items-center mb-3">
+            <CheckCircle2 className="h-8 w-8 text-gold-400" />
+          </motion.div>
+          <h3 className="font-display text-2xl font-bold">Transfer Successful</h3>
+          <p className="text-xs text-white/70 mt-1">Transaction completed securely</p>
         </div>
-        <Button 
-          className="w-full mt-6" 
-          variant="gold" 
-          onClick={() => { 
-            setStep(1); 
-            setFormData({ amount: '', phone: '', provider: 'zaad', type: 'p2p', smartCategory: '' }); 
-          }}
-        >
-          Send Another
-        </Button>
+
+        {/* Receipt Body */}
+        <div className="p-6 bg-white dark:bg-forest-950">
+          <div className="flex items-center gap-2 mb-4 pb-4 border-b border-dashed border-forest-200 dark:border-white/10">
+            <FileText className="h-4 w-4 text-forest-700/60" />
+            <span className="text-xs font-bold uppercase tracking-wider text-forest-700/60 dark:text-sand-100/50">Official Receipt</span>
+          </div>
+
+          <div className="space-y-3 text-sm">
+            <div className="flex justify-between">
+              <span className="text-forest-700/60 dark:text-sand-100/50">Recipient</span>
+              <span className="font-semibold text-forest-900 dark:text-sand-50">{formData.phone}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-forest-700/60 dark:text-sand-100/50">Network</span>
+              <span className="font-semibold text-forest-900 dark:text-sand-50">{PROVIDERS.find(p => p.id === formData.provider)?.name}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-forest-700/60 dark:text-sand-100/50">FX Rate (Demo)</span>
+              <span className="font-semibold text-forest-900 dark:text-sand-50">1 USD = {mockFxRate} SOS</span>
+            </div>
+            
+            <div className="pt-3 mt-3 border-t border-dashed border-forest-200 dark:border-white/10 space-y-2">
+              <div className="flex justify-between text-forest-900 dark:text-sand-50">
+                <span>Amount Sent</span>
+                <span className="font-semibold">{fmtMoney(amount)}</span>
+              </div>
+              <div className="flex justify-between text-forest-700/60 dark:text-sand-100/50">
+                <span>Service Fee (Ujrah)</span>
+                <span className="font-semibold">{fmtMoney(fee)}</span>
+              </div>
+            </div>
+
+            <div className="pt-3 mt-3 border-t border-forest-200 dark:border-white/10 flex justify-between items-center">
+              <span className="font-bold text-forest-900 dark:text-sand-50">Total Deducted</span>
+              <span className="font-display text-2xl font-extrabold text-gold-600">{fmtMoney(total)}</span>
+            </div>
+          </div>
+
+          <div className="mt-6 pt-4 border-t border-forest-100 dark:border-white/5 flex justify-between text-[10px] text-forest-700/40 dark:text-sand-100/30 font-mono">
+            <span>Ref: {receiptData.refId}</span>
+            <span>{receiptData.date}</span>
+          </div>
+        </div>
+
+        {/* Receipt Footer Actions */}
+        <div className="p-4 bg-black/5 dark:bg-white/5 flex gap-3">
+          <Button variant="ghost" className="flex-1 flex items-center justify-center gap-2">
+            <Share2 className="h-4 w-4" /> Share Receipt
+          </Button>
+          <Button variant="gold" className="flex-1" onClick={() => { setStep(1); setFormData({ amount: '', phone: '', provider: 'zaad', type: 'p2p', smartCategory: '' }); }}>
+            New Transfer
+          </Button>
+        </div>
       </Card>
     );
   }
 
+  // --- FORM STATE ---
   return (
     <Card className="p-6 max-w-2xl mx-auto">
-      <h3 className="font-display font-bold text-lg mb-4">Send Money or Pay Bills</h3>
+      <h3 className="font-display font-bold text-lg mb-4 text-forest-900 dark:text-sand-50">Send Money or Pay Bills</h3>
       
       <div className="flex gap-2 mb-6 bg-black/5 dark:bg-white/5 p-1 rounded-xl">
-        <button 
-          onClick={() => setFormData({ ...formData, type: 'p2p' })} 
-          className={`flex-1 py-2 rounded-lg text-sm font-semibold transition ${formData.type === 'p2p' ? 'bg-white dark:bg-forest-900 shadow-sm' : 'text-forest-700/60'}`}
-        >
-          P2P Transfer
-        </button>
-        <button 
-          onClick={() => setFormData({ ...formData, type: 'smart' })} 
-          className={`flex-1 py-2 rounded-lg text-sm font-semibold transition ${formData.type === 'smart' ? 'bg-white dark:bg-forest-900 shadow-sm' : 'text-forest-700/60'}`}
-        >
-          Smart Send
-        </button>
-        <button 
-          onClick={() => setFormData({ ...formData, type: 'bill' })} 
-          className={`flex-1 py-2 rounded-lg text-sm font-semibold transition ${formData.type === 'bill' ? 'bg-white dark:bg-forest-900 shadow-sm' : 'text-forest-700/60'}`}
-        >
-          Pay Bills
-        </button>
+        <button onClick={() => setFormData({ ...formData, type: 'p2p' })} className={`flex-1 py-2 rounded-lg text-sm font-semibold transition ${formData.type === 'p2p' ? 'bg-white dark:bg-forest-900 shadow-sm text-forest-900 dark:text-sand-50' : 'text-forest-700/60'}`}>P2P Transfer</button>
+        <button onClick={() => setFormData({ ...formData, type: 'smart' })} className={`flex-1 py-2 rounded-lg text-sm font-semibold transition ${formData.type === 'smart' ? 'bg-white dark:bg-forest-900 shadow-sm text-forest-900 dark:text-sand-50' : 'text-forest-700/60'}`}>Smart Send</button>
+        <button onClick={() => setFormData({ ...formData, type: 'bill' })} className={`flex-1 py-2 rounded-lg text-sm font-semibold transition ${formData.type === 'bill' ? 'bg-white dark:bg-forest-900 shadow-sm text-forest-900 dark:text-sand-50' : 'text-forest-700/60'}`}>Pay Bills</button>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {formData.type === 'bill' ? (
           <div>
-            <label className="text-sm font-semibold mb-1 block">Select Bill Category</label>
-            <select 
-              value={formData.smartCategory} 
-              onChange={(e) => setFormData({ ...formData, smartCategory: e.target.value })} 
-              className="w-full p-3 rounded-xl border border-forest-200 dark:border-white/10 bg-transparent" 
-              required
-            >
+            <label className="text-sm font-semibold mb-1 block text-forest-800 dark:text-sand-100">Select Bill Category</label>
+            <select value={formData.smartCategory} onChange={(e) => setFormData({ ...formData, smartCategory: e.target.value })} className="w-full p-3 rounded-xl border border-forest-200 dark:border-white/10 bg-transparent text-forest-900 dark:text-sand-50" required>
               <option value="">Choose a category...</option>
               {BILL_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
             </select>
@@ -175,15 +159,8 @@ export default function SendMoneyForm() {
         ) : (
           <>
             <div>
-              <label className="text-sm font-semibold mb-1 block">Recipient Phone Number</label>
-              <input 
-                type="tel" 
-                value={formData.phone} 
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })} 
-                className="w-full p-3 rounded-xl border border-forest-200 dark:border-white/10 bg-transparent" 
-                placeholder="+252 61 XXX XXXX" 
-                required 
-              />
+              <label className="text-sm font-semibold mb-1 block text-forest-800 dark:text-sand-100">Recipient Phone Number</label>
+              <input type="tel" value={formData.phone} onChange={(e) => setFormData({ ...formData, phone: e.target.value })} className="w-full p-3 rounded-xl border border-forest-200 dark:border-white/10 bg-transparent text-forest-900 dark:text-sand-50 focus:border-gold-500 focus:outline-none" placeholder="+252 61 XXX XXXX" required />
             </div>
             {formData.type === 'smart' && (
               <div className="p-3 rounded-xl bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800">
@@ -194,12 +171,7 @@ export default function SendMoneyForm() {
                     <p className="text-xs text-teal-700/70 dark:text-teal-300/70">Funds can only be spent at verified partners in the selected category.</p>
                   </div>
                 </div>
-                <select 
-                  value={formData.smartCategory} 
-                  onChange={(e) => setFormData({ ...formData, smartCategory: e.target.value })} 
-                  className="w-full mt-2 p-2 rounded-lg border border-teal-300 dark:border-teal-700 bg-white dark:bg-forest-900 text-sm" 
-                  required
-                >
+                <select value={formData.smartCategory} onChange={(e) => setFormData({ ...formData, smartCategory: e.target.value })} className="w-full mt-2 p-2 rounded-lg border border-teal-300 dark:border-teal-700 bg-white dark:bg-forest-900 text-sm text-forest-900 dark:text-sand-50" required>
                   <option value="">Restrict to category...</option>
                   {BILL_CATEGORIES.map(c => <option key={c} value={c}>{c}</option>)}
                 </select>
@@ -209,29 +181,17 @@ export default function SendMoneyForm() {
         )}
 
         <div>
-          <label className="text-sm font-semibold mb-1 block">Amount ({state.profile.currency})</label>
-          <input 
-            type="number" 
-            value={formData.amount} 
-            onChange={(e) => setFormData({ ...formData, amount: e.target.value })} 
-            className="w-full p-3 rounded-xl border border-forest-200 dark:border-white/10 bg-transparent text-2xl font-display font-bold" 
-            placeholder="0.00" 
-            required 
-          />
+          <label className="text-sm font-semibold mb-1 block text-forest-800 dark:text-sand-100">Amount ({state.profile.currency})</label>
+          <input type="number" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} className="w-full p-3 rounded-xl border border-forest-200 dark:border-white/10 bg-transparent text-2xl font-display font-bold text-forest-900 dark:text-sand-50 focus:border-gold-500 focus:outline-none" placeholder="0.00" required />
         </div>
 
         <div>
-          <label className="text-sm font-semibold mb-2 block">Select Network</label>
+          <label className="text-sm font-semibold mb-2 block text-forest-800 dark:text-sand-100">Select Network</label>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {PROVIDERS.map((p) => (
-              <button 
-                key={p.id} 
-                type="button" 
-                onClick={() => setFormData({ ...formData, provider: p.id })}
-                className={`p-3 rounded-xl border-2 text-center transition ${formData.provider === p.id ? 'border-gold-500 bg-gold-50 dark:bg-gold-500/10' : 'border-forest-100 dark:border-white/10 hover:border-gold-300'}`}
-              >
+              <button key={p.id} type="button" onClick={() => setFormData({ ...formData, provider: p.id })} className={`p-3 rounded-xl border-2 text-center transition ${formData.provider === p.id ? 'border-gold-500 bg-gold-50 dark:bg-gold-500/10' : 'border-forest-100 dark:border-white/10 hover:border-gold-300'}`}>
                 <div className={`h-8 w-8 mx-auto rounded-lg ${p.color} mb-2`} />
-                <p className="text-xs font-bold">{p.name}</p>
+                <p className="text-xs font-bold text-forest-900 dark:text-sand-50">{p.name}</p>
               </button>
             ))}
           </div>
@@ -239,28 +199,13 @@ export default function SendMoneyForm() {
 
         {amount > 0 && (
           <div className="p-4 rounded-xl bg-black/5 dark:bg-white/5 space-y-1 text-sm">
-            <div className="flex justify-between">
-              <span>Amount</span>
-              <span>{fmtMoney(amount)}</span>
-            </div>
-            <div className="flex justify-between text-forest-700/60">
-              <span>Service Fee (Ujrah)</span>
-              <span>{fmtMoney(fee)}</span>
-            </div>
-            <div className="flex justify-between font-bold text-lg pt-2 border-t border-black/10 dark:border-white/10">
-              <span>Total</span>
-              <span className="text-gold-600">{fmtMoney(total)}</span>
-            </div>
+            <div className="flex justify-between text-forest-900 dark:text-sand-50"><span>Amount</span><span>{fmtMoney(amount)}</span></div>
+            <div className="flex justify-between text-forest-700/60 dark:text-sand-100/50"><span>Service Fee (Ujrah)</span><span>{fmtMoney(fee)}</span></div>
+            <div className="flex justify-between font-bold text-lg pt-2 border-t border-black/10 dark:border-white/10 text-forest-900 dark:text-sand-50"><span>Total</span><span className="text-gold-600">{fmtMoney(total)}</span></div>
           </div>
         )}
 
-        <Button 
-          type="submit" 
-          variant="gold" 
-          size="lg" 
-          className="w-full" 
-          disabled={total > state.wallet.balance}
-        >
+        <Button type="submit" variant="gold" size="lg" className="w-full" disabled={total > state.wallet.balance}>
           {total > state.wallet.balance ? 'Insufficient Balance' : `Confirm & Send ${fmtMoney(total)}`}
         </Button>
       </form>
