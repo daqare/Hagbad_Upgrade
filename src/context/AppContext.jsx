@@ -31,6 +31,17 @@ function reducer(state, action) {
     }
     case 'ADD_SAVINGS': return { ...state, savingsAccounts: [action.account, ...state.savingsAccounts] };
     case 'UPDATE_SAVINGS': return { ...state, savingsAccounts: state.savingsAccounts.map((s) => (s.id === action.id ? { ...s, ...action.patch } : s)) };
+       case 'ADD_GROUP': {
+      const newGroup = {
+        ...action.group,
+        health: 100,
+        activity: [],
+        currentIndex: 0,
+        rotation: action.group.members || [],
+        nextPayout: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      };
+      return { ...state, groups: [newGroup, ...state.groups] };
+    }
     case 'UPDATE_GROUP': return { ...state, groups: state.groups.map((g) => (g.id === action.id ? { ...g, ...action.patch } : g)) };
     
     // --- NEW: Add a brand new group to the list ---
