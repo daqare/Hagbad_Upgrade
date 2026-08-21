@@ -58,6 +58,7 @@ function reducer(state, action) {
     case 'VOTE_POLL': return { ...state, polls: state.polls.map((p) => (p.id === action.id ? { ...p, options: p.options.map((o) => (o.id === action.opt ? { ...o, votes: o.votes + 1 } : o)) } : p)) };
     case 'INVEST': return { ...state, investments: state.investments.map((iv) => (iv.id === action.id ? { ...iv, raised: iv.raised + action.amount, investors: iv.investors + 1 } : iv)) };
     case 'SET_DASHBOARD_TAB': return { ...state, dashboardTab: action.tab };
+    case 'SET_PRO': return { ...state, isPro: action.payload };
     case 'SET_SETTINGS': return { ...state, settings: { ...state.settings, ...action.payload } };
     
     // --- NEW: Handle Sending Money (Deduct balance + fee) ---
