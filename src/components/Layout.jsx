@@ -57,7 +57,17 @@ export default function Layout() {
   return (
     <div className="min-h-screen">
       <Orbs />
+// Add this right after <Orbs /> in Layout.jsx
+<div className="fixed top-0 inset-x-0 z-50 bg-amber-400/90 dark:bg-amber-500/90 text-amber-950 text-xs font-bold text-center py-1.5 backdrop-blur-sm">
+  🛠️ Demo Mode: No real money is moved. All transactions are simulated.
+</div>
 
+// Then, adjust the <header> and <main> top padding to account for the banner:
+// Change <header className="fixed top-0 ..."> to:
+<header className="fixed top-6 inset-x-0 md:left-64 z-40 glass border-b border-white/40 dark:border-white/10">
+
+// Change <main className="md:pl-64 pt-16 ..."> to:
+<main className="md:pl-64 pt-20 pb-24 md:pb-10">
       <aside className="hidden md:flex fixed inset-y-0 left-0 w-64 flex-col glass border-r border-white/40 dark:border-white/10 z-30">
         <div className="p-5"><Logo /></div>
         <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
