@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Users, CalendarDays, ShieldCheck, ArrowUpRight, ArrowDownLeft,
+  Users, CalendarDays, ShieldCheck, ArrowUpRight, ArrowDownLeft, HandCoins,
   Zap, HeartHandshake, Target, Flame, ChevronRight, Send, Receipt, Wallet,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
@@ -11,6 +11,7 @@ import { fmtMoney, fmtDate, pct, relTime } from '../utils/format';
 import { Card, Stat, Badge, Button, ProgressRing, Bar, DemoBadge } from '../components/ui';
 import { AreaFlow, DualBar } from '../components/Charts';
 import { SomaliPattern } from '../components/SomaliPattern';
+import QardHasanModal from '../components/QardHasanModal';
 
 const MONTHLY = [
   { m: 'Mar', amount: 320 }, { m: 'Apr', amount: 380 }, { m: 'May', amount: 340 },
@@ -27,7 +28,7 @@ export default function Dashboard() {
   const nav = useNavigate();
   const balance = useCountUp(state.wallet.balance);
   const { profile, trust, groups, savingsAccounts, transactions, meta } = state;
-
+  const [showLoan, setShowLoan] = useState(false);
   const nextPayout = groups[0];
   const totalSavings = savingsAccounts.reduce((a, s) => a + s.balance, 0);
   const goal = savingsAccounts[0];
@@ -100,6 +101,7 @@ export default function Dashboard() {
           { label: 'Bills', icon: Receipt, color: 'bg-teal-100 text-teal-600 dark:bg-teal-500/15 dark:text-teal-400', action: () => nav('/pay') },
           { label: 'Circles', icon: Users, color: 'bg-forest-100 text-forest-600 dark:bg-forest-500/15 dark:text-forest-400', action: () => nav('/groups') },
           { label: 'Smart', icon: Zap, color: 'bg-plum-100 text-plum-600 dark:bg-plum-500/15 dark:text-plum-400', action: () => nav('/pay') },
+          { label: 'Loan', icon: HandCoins, color: 'bg-coral-100 text-coral-600 dark:bg-coral-500/15 dark:text-coral-400', action: () => setShowLoan(true) },
         ].map((item) => (
           <button key={item.label} onClick={item.action} className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-white dark:bg-white/5 border border-forest-100 dark:border-white/10 hover:border-gold-400/60 transition">
             <div className={`h-10 w-10 rounded-xl grid place-items-center ${item.color}`}>
@@ -236,6 +238,7 @@ export default function Dashboard() {
           ))}
         </div>
       </Card>
+      {showLoan && <QardHasanModal onClose={() => setShowLoan(false)} />}
 
     </div>
   );
