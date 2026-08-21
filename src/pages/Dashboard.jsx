@@ -12,6 +12,7 @@ import { Card, Stat, Badge, Button, ProgressRing, Bar, DemoBadge } from '../comp
 import { AreaFlow, DualBar } from '../components/Charts';
 import { SomaliPattern } from '../components/SomaliPattern';
 import QardHasanModal from '../components/QardHasanModal';
+import ProUpgradeModal from '../components/ProUpgradeModal';
 
 const MONTHLY = [
   { m: 'Mar', amount: 320 }, { m: 'Apr', amount: 380 }, { m: 'May', amount: 340 },
@@ -24,6 +25,7 @@ const CASHFLOW = [
 ];
 
 export default function Dashboard() {
+  const [showPro, setShowPro] = useState(false);
   const { state, dispatch } = useApp();
   const nav = useNavigate();
   const balance = useCountUp(state.wallet.balance);
@@ -93,7 +95,36 @@ export default function Dashboard() {
           <p className="text-[10px] text-forest-700/50">{trust.level}</p>
         </Card>
       </div>
+            {/* HAGBAD PRO BANNER */}
+      {!state.isPro && (
+        <div className="relative overflow-hidden rounded-2xl bg-gradient-to-r from-gold-500 to-amber-600 p-5 text-white shadow-lg">
+          <div className="relative z-10 flex items-center justify-between flex-wrap gap-4">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 rounded-xl bg-white/20 backdrop-blur-sm grid place-items-center">
+                <Crown className="h-5 w-5 text-white" />
+              </div>
+              <div>
+                <p className="font-display font-bold text-lg">Unlock Hagbad Pro</p>
+                <p className="text-xs text-white/90">SMS reminders, PDF reports & up to 500 members.</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => setShowPro(true)} 
+              className="px-5 py-2.5 rounded-xl bg-white text-gold-700 font-bold text-sm hover:bg-gold-50 transition shadow-md"
+            >
+              Upgrade $9.99/mo
+            </button>
+          </div>
+        </div>
+      )}
 
+      {state.isPro && (
+        <div className="flex items-center gap-2 p-3 rounded-xl bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800">
+          <Crown className="h-4 w-4 text-teal-600" />
+          <p className="text-xs font-bold text-teal-800 dark:text-teal-200">Hagbad Pro Active</p>
+          <button onClick={() => dispatch({ type: 'SET_PRO', payload: false })} className="ml-auto text-[10px] text-teal-600 underline">Reset Demo</button>
+        </div>
+      )}
       {/* 3. QUICK ACTIONS GRID */}
       <div className="grid grid-cols-4 gap-3">
         {[
@@ -239,7 +270,7 @@ export default function Dashboard() {
         </div>
       </Card>
       {showLoan && <QardHasanModal onClose={() => setShowLoan(false)} />}
-
+      {showPro && <ProUpgradeModal onClose={() => setShowPro(false)} />}
     </div>
   );
 }
