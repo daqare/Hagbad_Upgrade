@@ -4,25 +4,58 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { CheckCircle2, XCircle, RefreshCcw, Loader2, Smartphone, Receipt } from 'lucide-react';
+import {
+  Smartphone, CheckCircle2, Loader2, XCircle, RefreshCcw, Receipt,
+} from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { PROVIDER_GROUPS, byId } from '../services/paymentProviders';
-import { STAGES } from '../services/paymentProviders/base';
-import { Card, Button, Badge, Field, inputCls, DemoBadge } from '../components/ui';
-import { fmtMoney } from '../utils/format';
-import { uid, txnRef } from '../utils/ids';
+import { fmtMoney, txnRef } from '../utils/format';
+import { uid } from '../utils/ids';
+import { Card, Button, Badge, Field } from '../components/ui';
+import { DemoBadge } from '../components/ui'; // Adjust import path if needed
+import SendMoneyForm from '../components/SendMoneyForm'; // <-- NEW: Import the new form
 
+// --- EXISTING SCHEMA & DATA ---
 const schema = z.object({
-  amount: z.coerce.number().min(1, 'Enter an amount'),
-  phone: z.string().min(9, 'Enter a valid phone number'),
-  purpose: z.string().min(2, 'Select a purpose'),
+  amount: z.coerce.number().min(1, 'Amount must be greater than 0'),
+  phone: z.string().min(5, 'Invalid phone number'),
+  purpose: z.string(),
 });
 
-const PURPOSES = ['Circle contribution', 'Wallet deposit', 'Savings top-up', 'SACCO savings', 'Emergency support', 'Investment'];
+const PROVIDER_GROUPS = [
+  {
+    label: 'Mobile Money',
+    ids: ['evc', 'zaad', 'edahab', 'mpesa'],
+  },
+];
 
+const byId = (id) => {
+  const map = {
+    evc: { id: 'evc', name: 'EVC Plus', region: 'Somalia', ussdHint: 'Dial *789#', accent: '#0055A4' },
+    zaad: { id: 'zaad', name: 'Zaad Service', region: 'Somaliland', ussdHint: 'Dial *826#', accent: '#FFC72C' },
+    edahab: { id: 'edahab', name: 'eDahab', region: 'Djibouti/Somalia', ussdHint: 'Dial *789#', accent: '#FF6B00' },
+    mpesa: { id: 'mpesa', name: 'M-Pesa', region: 'Kenya', ussdHint: 'SIM Toolkit', accent: '#43B02A' },
+  };
+  return map[id];
+};
+
+const STAGES = [
+  { key: 'init', label: 'Initiating secure connection' },
+  { key: 'ussd', label: 'Sending USSD prompt to phone' },
+  { key: 'pin', label: 'Waiting for PIN confirmation' },
+  { key: 'success', label: 'Transaction approved' },
+];
+
+const PURPOSES = ['Circle contribution', 'Wallet deposit', 'Savings top-up', 'SACCO savings', 'Emergency support', 'Investment'];
+const inputCls = 'w-full rounded-xl border border-forest-200 dark:border-white/10 bg-transparent px-4 py-3 text-sm focus:border-gold-500 focus:outline-none focus:ring-1 focus:ring-gold-500';
+
+// --- MAIN COMPONENT ---
 export default function PaymentHub() {
   const { state, dispatch, toast } = useApp();
   const nav = useNavigate();
+  
+  // 1. NEW: This is the "tab state". It remembers if the user clicked "Send" or "Deposit"
+  const [tab, setTab] = useState('send'); 
+  
   const [provider, setProvider] = useState(null);
   const [stage, setStage] = useState('form');
   const [stageIdx, setStageIdx] = useState(0);
@@ -57,14 +90,35 @@ export default function PaymentHub() {
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="font-display text-3xl font-bold">Payment Hub</h1>
-          <p className="mt-1 text-sm text-forest-700/60 dark:text-sand-100/50">Choose a mobile-money provider to fund your wallet.</p>
+          <p className="mt-1 text-sm text-forest-700/60 dark:text-sand-100/50">Manage your wallet: Send money or Cash in.</p>
         </div>
         <DemoBadge />
       </div>
 
+      {/* 2. NEW: The Tab Buttons to switch between Send and Deposit */}
+      <div className="flex gap-2 bg-black/5 dark:bg-white/5 p-1 rounded-2xl w-fit">
+        <button 
+          onClick={() => setTab('send')} 
+          className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all ${tab === 'send' ? 'bg-white dark:bg-forest-900 shadow-sm text-forest-900 dark:text-sand-50' : 'text-forest-700/60 dark:text-sand-100/50 hover:text-forest-900'}`}
+        >
+          Send Money / Pay Bills
+        </button>
+        <button 
+          onClick={() => setTab('deposit')} 
+          className={`px-6 py-2.5 rounded-xl text-sm font-semibold transition-all ${tab === 'deposit' ? 'bg-white dark:bg-forest-900 shadow-sm text-forest-900 dark:text-sand-50' : 'text-forest-700/60 dark:text-sand-100/50 hover:text-forest-900'}`}
+        >
+          Cash In (Deposit)
+        </button>
+      </div>
+
       <AnimatePresence mode="wait">
-        {stage === 'form' && (
-          <motion.div key="form" initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} className="grid lg:grid-cols-5 gap-6">
+        {/* 3. NEW: Only show the Deposit form if the 'deposit' tab is active */}
+        {tab === 'deposit' && (
+          <motion.div 
+            key="deposit-view" 
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }} 
+            className="grid lg:grid-cols-5 gap-6"
+          >
             <div className="lg:col-span-3 space-y-5">
               {PROVIDER_GROUPS.map((grp) => (
                 <div key={grp.label}>
@@ -115,7 +169,7 @@ export default function PaymentHub() {
                       </select>
                     </Field>
                     <Button type="submit" variant="gold" size="lg" className="w-full">Pay {fmtMoney(amount || 0)}</Button>
-                    <button type="button" onClick={handleSubmit((d) => runPayment(d, true))} className="w-full text-xs text-coral-600 hover:underline">
+                    <button type="button" onClick={handleSubmit((d) => runPayment(d, true))} className="w-full text-xs text-coral-600 hover:underline mt-2">
                       Simulate a failed payment (demo)
                     </button>
                   </form>
@@ -125,7 +179,18 @@ export default function PaymentHub() {
           </motion.div>
         )}
 
-        {stage === 'auth' && (
+        {/* 4. NEW: Show the Send Money form if the 'send' tab is active */}
+        {tab === 'send' && (
+          <motion.div
+            key="send-view"
+            initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}
+          >
+            <SendMoneyForm />
+          </motion.div>
+        )}
+
+        {/* Existing Auth/Success/Fail stages for Deposit (Only show if tab is deposit) */}
+        {tab === 'deposit' && stage === 'auth' && (
           <motion.div key="auth" initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} className="max-w-md mx-auto">
             <Card className="p-8 text-center">
               <Loader2 className="h-8 w-8 mx-auto animate-spin text-gold-500" />
@@ -145,7 +210,7 @@ export default function PaymentHub() {
           </motion.div>
         )}
 
-        {stage === 'success' && receipt && (
+        {tab === 'deposit' && stage === 'success' && receipt && (
           <motion.div key="success" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-md mx-auto">
             <Card className="p-8 text-center">
               <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: 'spring', damping: 12 }} className="h-16 w-16 mx-auto rounded-full bg-forest-100 dark:bg-forest-800/40 grid place-items-center text-forest-600 dark:text-forest-200">
@@ -167,7 +232,7 @@ export default function PaymentHub() {
           </motion.div>
         )}
 
-        {stage === 'fail' && (
+        {tab === 'deposit' && stage === 'fail' && (
           <motion.div key="fail" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="max-w-md mx-auto">
             <Card className="p-8 text-center">
               <div className="h-16 w-16 mx-auto rounded-full bg-coral-100 dark:bg-coral-800/30 grid place-items-center text-coral-600"><XCircle className="h-8 w-8" /></div>
