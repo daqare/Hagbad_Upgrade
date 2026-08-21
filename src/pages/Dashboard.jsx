@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Users, CalendarDays, ShieldCheck, ArrowUpRight, ArrowDownLeft, HandCoins,
-  Zap, HeartHandshake, Target, Flame, ChevronRight, Send, Receipt, Wallet, Crown
+  Zap, HeartHandshake, Target, Flame, ChevronRight, Send, Receipt, Wallet, Crown, TrendingUp
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useCountUp } from '../hooks/useCountUp';
