@@ -57,17 +57,12 @@ export default function Layout() {
   return (
     <div className="min-h-screen">
       <Orbs />
-// Add this right after <Orbs /> in Layout.jsx
-<div className="fixed top-0 inset-x-0 z-50 bg-amber-400/90 dark:bg-amber-500/90 text-amber-950 text-xs font-bold text-center py-1.5 backdrop-blur-sm">
-  🛠️ Demo Mode: No real money is moved. All transactions are simulated.
-</div>
 
-// Then, adjust the <header> and <main> top padding to account for the banner:
-// Change <header className="fixed top-0 ..."> to:
-<header className="fixed top-6 inset-x-0 md:left-64 z-40 glass border-b border-white/40 dark:border-white/10">
+      {/* --- NEW: Demo Mode Banner --- */}
+      <div className="fixed top-0 inset-x-0 z-50 bg-amber-400/90 dark:bg-amber-500/90 text-amber-950 text-xs font-bold text-center py-1.5 backdrop-blur-sm">
+        🛠️ Demo Mode: No real money is moved. All transactions are simulated.
+      </div>
 
-// Change <main className="md:pl-64 pt-16 ..."> to:
-<main className="md:pl-64 pt-20 pb-24 md:pb-10">
       <aside className="hidden md:flex fixed inset-y-0 left-0 w-64 flex-col glass border-r border-white/40 dark:border-white/10 z-30">
         <div className="p-5"><Logo /></div>
         <nav className="flex-1 px-3 space-y-1 overflow-y-auto">
@@ -87,7 +82,8 @@ export default function Layout() {
         </div>
       </aside>
 
-      <header className="fixed top-0 inset-x-0 md:left-64 z-30 glass border-b border-white/40 dark:border-white/10">
+      {/* --- UPDATED: Header pushed down by 8 (top-8) to clear the banner --- */}
+      <header className="fixed top-8 inset-x-0 md:left-64 z-40 glass border-b border-white/40 dark:border-white/10">
         <div className="flex items-center justify-between px-4 md:px-6 h-16">
           <div className="flex items-center gap-3 md:hidden">
             <button onClick={() => setMobileOpen(true)} aria-label="Menu" className="p-2 rounded-xl hover:bg-black/5 dark:hover:bg-white/10">
@@ -156,7 +152,8 @@ export default function Layout() {
         )}
       </AnimatePresence>
 
-      <main className="md:pl-64 pt-16 pb-24 md:pb-10">
+      {/* --- UPDATED: Main content pushed down by 20 (pt-20) to clear the banner --- */}
+      <main className="md:pl-64 pt-20 pb-24 md:pb-10">
         <div className="max-w-6xl mx-auto px-4 md:px-8">
           <Outlet />
         </div>
