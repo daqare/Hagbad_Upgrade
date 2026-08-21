@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Users, CalendarDays, ShieldCheck, ArrowUpRight, ArrowDownLeft,
-  Zap, HeartHandshake, Target, Flame, ChevronRight,
+  Zap, HeartHandshake, Target, Flame, ChevronRight, Send, Receipt,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useCountUp } from '../hooks/useCountUp';
@@ -34,46 +34,58 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-6 py-6">
+      
+      {/* 1. HERO WALLET CARD */}
       <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-forest-950 via-forest-900 to-teal-950 text-sand-50 p-7 md:p-9 shadow-lift">
         <SomaliPattern color="#D4A017" opacity={0.09} />
         <div className="absolute -top-16 -right-16 h-64 w-64 rounded-full bg-gold-500/15 blur-3xl" />
-        <div className="relative z-10 flex flex-col md:flex-row md:items-end md:justify-between gap-6">
-          <div>
-            <div className="flex items-center gap-2">
+        
+        <div className="relative z-10">
+          <div className="flex items-start justify-between mb-6">
+            <div>
               <p className="text-sand-100/60 text-sm">Assalaamu calaykum, <span className="font-semibold text-sand-50">{profile.name.split(' ')[0]}</span></p>
-              <DemoBadge />
-              {meta.investorMode && <Badge tone="coral"><Zap className="h-3 w-3" /> Investor Mode</Badge>}
+              <p className="mt-4 text-sm text-sand-100/60">Available wallet balance</p>
+              <motion.p key={Math.round(balance)} className="font-display text-5xl md:text-6xl font-extrabold tracking-tight text-gold-400 mt-1">
+                {fmtMoney(balance, profile.currency)}
+              </motion.p>
             </div>
-            <p className="mt-4 text-sm text-sand-100/60">Available wallet balance</p>
-            <motion.p key={Math.round(balance)} className="font-display text-5xl md:text-6xl font-extrabold tracking-tight text-gold-400">
-              {fmtMoney(balance, profile.currency)}
-            </motion.p>
-            <div className="mt-4 flex flex-wrap gap-2">
-              <Button variant="gold" onClick={() => nav('/pay')}><ArrowUpRight className="h-4 w-4" /> Make a payment</Button>
-              <Button variant="ghost" className="!border-white/25 !text-sand-50" onClick={() => nav('/wallet')}>View wallet</Button>
+            <div className="flex flex-col items-end gap-2">
+              <DemoBadge />
+              <Badge tone="teal" className="!bg-teal-500/20 !text-teal-200 !border-teal-500/30">
+                <ShieldCheck className="h-3 w-3" /> 100% Sharia-Compliant
+              </Badge>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3 md:w-80">
-            <div className="glass !bg-white/10 rounded-2xl p-4">
-              <p className="text-xs text-sand-100/60">Savings total</p>
-              <p className="mt-1 font-display text-xl font-bold">{fmtMoney(totalSavings, profile.currency)}</p>
-            </div>
-            <div className="glass !bg-white/10 rounded-2xl p-4">
-              <p className="text-xs text-sand-100/60">Trust score</p>
-              <p className="mt-1 font-display text-xl font-bold text-gold-400">{trust.score}</p>
-            </div>
-            <div className="glass !bg-white/10 rounded-2xl p-4 col-span-2 flex items-center justify-between">
-              <div>
-                <p className="text-xs text-sand-100/60">Next payout · {nextPayout?.name}</p>
-                <p className="mt-0.5 font-semibold">{fmtDate(nextPayout?.nextPayout)}</p>
-              </div>
-              <CalendarDays className="h-6 w-6 text-gold-400" />
-            </div>
+          <div className="flex gap-3 mt-6">
+            <Button variant="gold" onClick={() => nav('/pay')} className="flex-1">
+              <ArrowUpRight className="h-4 w-4 mr-2" /> Send Money
+            </Button>
+            <Button variant="ghost" className="flex-1 !border-white/25 !text-sand-50" onClick={() => nav('/pay')}>
+              <ArrowDownLeft className="h-4 w-4 mr-2" /> Cash In
+            </Button>
           </div>
         </div>
       </div>
 
+      {/* 2. QUICK ACTIONS GRID */}
+      <div className="grid grid-cols-4 gap-3">
+        {[
+          { label: 'Send', icon: Send, color: 'bg-gold-100 text-gold-600 dark:bg-gold-500/15 dark:text-gold-400', action: () => nav('/pay') },
+          { label: 'Bills', icon: Receipt, color: 'bg-teal-100 text-teal-600 dark:bg-teal-500/15 dark:text-teal-400', action: () => nav('/pay') },
+          { label: 'Circles', icon: Users, color: 'bg-forest-100 text-forest-600 dark:bg-forest-500/15 dark:text-forest-400', action: () => nav('/groups') },
+          { label: 'Smart', icon: Zap, color: 'bg-plum-100 text-plum-600 dark:bg-plum-500/15 dark:text-plum-400', action: () => nav('/pay') },
+        ].map((item) => (
+          <button key={item.label} onClick={item.action} className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-white dark:bg-white/5 border border-forest-100 dark:border-white/10 hover:border-gold-400/60 transition">
+            <div className={`h-10 w-10 rounded-xl grid place-items-center ${item.color}`}>
+              <item.icon className="h-5 w-5" />
+            </div>
+            <span className="text-xs font-semibold text-forest-800 dark:text-sand-100">{item.label}</span>
+          </button>
+        ))}
+      </div>
+
+      {/* INVESTOR MODE TOGGLE */}
       <Card className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-2xl bg-gold-100 dark:bg-gold-500/15 grid place-items-center text-gold-600"><Zap className="h-5 w-5" /></div>
@@ -89,6 +101,38 @@ export default function Dashboard() {
         </button>
       </Card>
 
+      {/* 3. ACTIVE CIRCLES CAROUSEL */}
+      <div className="mt-2">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="font-display font-bold text-lg text-forest-900 dark:text-sand-50">Active Circles</h3>
+          <Link to="/groups" className="text-xs font-semibold text-teal-700 dark:text-teal-300 flex items-center">View all <ChevronRight className="h-3 w-3" /></Link>
+        </div>
+        <div className="flex gap-4 overflow-x-auto pb-4 -mx-4 px-4 scrollbar-hide">
+          {groups.map((g) => (
+            <div key={g.id} className="shrink-0 w-64 p-5 rounded-2xl bg-white dark:bg-white/5 border border-forest-100 dark:border-white/10 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <p className="font-semibold text-sm text-forest-900 dark:text-sand-50 truncate">{g.name}</p>
+                <Badge tone="forest" className="!text-[10px]">{g.members.length} members</Badge>
+              </div>
+              <div className="flex items-center gap-3 mb-4">
+                <ProgressRing value={g.health} color="#D4A017" size={40}>
+                  <p className="text-[10px] font-bold">{g.health}%</p>
+                </ProgressRing>
+                <div>
+                  <p className="text-xs text-forest-700/60 dark:text-sand-100/50">Next payout</p>
+                  <p className="text-sm font-bold text-forest-900 dark:text-sand-50">{fmtDate(g.nextPayout)}</p>
+                </div>
+              </div>
+              <div className="pt-3 border-t border-forest-100 dark:border-white/10 flex justify-between text-xs">
+                <span className="text-forest-700/60 dark:text-sand-100/50">Contribution</span>
+                <span className="font-bold text-forest-900 dark:text-sand-50">{fmtMoney(g.contribution, profile.currency)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* STATS GRID */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <Stat label="Active groups" value={groups.length} sub="Hagbad circles" icon={<Users className="h-5 w-5" />} tone="forest" />
         <Stat label="Contributions" value={fmtMoney(state.wallet.totalContributions, profile.currency)} sub="All-time" icon={<ArrowUpRight className="h-5 w-5" />} tone="teal" />
@@ -96,6 +140,7 @@ export default function Dashboard() {
         <Stat label="Emergency fund" value="Active" sub="1 open request" icon={<HeartHandshake className="h-5 w-5" />} tone="coral" />
       </div>
 
+      {/* CHARTS */}
       <div className="grid lg:grid-cols-2 gap-4">
         <Card className="p-6">
           <div className="flex items-center justify-between">
@@ -113,6 +158,7 @@ export default function Dashboard() {
         </Card>
       </div>
 
+      {/* TRUST & GOALS */}
       <div className="grid lg:grid-cols-3 gap-4">
         <Card className="p-6 flex items-center gap-5">
           <ProgressRing value={pct(goal.balance, goal.goal)} color="#D4A017">
@@ -140,51 +186,32 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      <div className="grid lg:grid-cols-2 gap-4">
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <h3 className="font-display font-bold">Recent transactions</h3>
-            <Link to="/wallet" className="text-xs font-semibold text-teal-700 dark:text-teal-300">See all</Link>
-          </div>
-          <div className="mt-4 space-y-2">
-            {transactions.slice(0, 5).map((tx) => (
-              <div key={tx.id} className="flex items-center justify-between p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition">
-                <div className="flex items-center gap-3">
-                  <div className={`h-9 w-9 rounded-xl grid place-items-center ${tx.amount >= 0 ? 'bg-forest-100 text-forest-700 dark:bg-forest-800/40 dark:text-forest-200' : 'bg-coral-100 text-coral-700 dark:bg-coral-800/30 dark:text-coral-300'}`}>
-                    {tx.amount >= 0 ? <ArrowDownLeft className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold capitalize">{tx.type}</p>
-                    <p className="text-xs text-forest-700/50 dark:text-sand-100/40">{tx.group || tx.account || tx.provider} · {relTime(tx.date)}</p>
-                  </div>
+      {/* RECENT TRANSACTIONS */}
+      <Card className="p-6">
+        <div className="flex items-center justify-between">
+          <h3 className="font-display font-bold">Recent transactions</h3>
+          <Link to="/wallet" className="text-xs font-semibold text-teal-700 dark:text-teal-300">See all</Link>
+        </div>
+        <div className="mt-4 space-y-2">
+          {transactions.slice(0, 5).map((tx) => (
+            <div key={tx.id} className="flex items-center justify-between p-3 rounded-2xl hover:bg-black/5 dark:hover:bg-white/5 transition">
+              <div className="flex items-center gap-3">
+                <div className={`h-9 w-9 rounded-xl grid place-items-center ${tx.amount >= 0 ? 'bg-forest-100 text-forest-700 dark:bg-forest-800/40 dark:text-forest-200' : 'bg-coral-100 text-coral-700 dark:bg-coral-800/30 dark:text-coral-300'}`}>
+                  {tx.amount >= 0 ? <ArrowDownLeft className="h-4 w-4" /> : <ArrowUpRight className="h-4 w-4" />}
                 </div>
-                <p className={`font-bold text-sm ${tx.amount >= 0 ? 'text-forest-700 dark:text-forest-200' : 'text-coral-600'}`}>
-                  {tx.amount >= 0 ? '+' : ''}{fmtMoney(tx.amount, profile.currency)}
-                </p>
+                <div>
+                  <p className="text-sm font-semibold capitalize">{tx.type}</p>
+                  <p className="text-xs text-forest-700/50 dark:text-sand-100/40">{tx.group || tx.account || tx.provider} · {relTime(tx.date)}</p>
+                </div>
               </div>
-            ))}
-          </div>
-        </Card>
+              <p className={`font-bold text-sm ${tx.amount >= 0 ? 'text-forest-700 dark:text-forest-200' : 'text-coral-600'}`}>
+                {tx.amount >= 0 ? '+' : ''}{fmtMoney(tx.amount, profile.currency)}
+              </p>
+            </div>
+          ))}
+        </div>
+      </Card>
 
-        <Card className="p-6">
-          <div className="flex items-center justify-between">
-            <h3 className="font-display font-bold">Active groups</h3>
-            <Link to="/groups" className="text-xs font-semibold text-teal-700 dark:text-teal-300">Manage</Link>
-          </div>
-          <div className="mt-4 space-y-3">
-            {groups.map((g) => (
-              <div key={g.id} className="p-4 rounded-2xl border border-forest-100 dark:border-white/10 hover:border-gold-400/60 transition">
-                <div className="flex items-center justify-between">
-                  <p className="font-semibold text-sm">{g.name}</p>
-                  <Badge tone="forest">{g.members.length}/{g.memberLimit}</Badge>
-                </div>
-                <p className="mt-1 text-xs text-forest-700/60 dark:text-sand-100/50">{fmtMoney(g.contribution, profile.currency)} · {g.frequency} · next {fmtDate(g.nextPayout)}</p>
-                <Bar value={g.health} color="bg-gradient-to-r from-teal-500 to-forest-500" className="mt-3" />
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
     </div>
   );
 }
