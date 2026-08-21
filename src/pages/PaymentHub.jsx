@@ -8,7 +8,7 @@ import {
   Smartphone, CheckCircle2, Loader2, XCircle, RefreshCcw, Receipt,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { fmtMoney, txnRef } from '../utils/format';
+import { fmtMoney } from '../utils/format';
 import { uid } from '../utils/ids';
 import { Card, Button, Badge, Field } from '../components/ui';
 import { DemoBadge } from '../components/ui'; // Adjust import path if needed
