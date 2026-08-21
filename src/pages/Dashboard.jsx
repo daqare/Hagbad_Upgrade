@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Users, CalendarDays, ShieldCheck, ArrowUpRight, ArrowDownLeft,
-  Zap, HeartHandshake, Target, Flame, ChevronRight, Send, Receipt,
+  Zap, HeartHandshake, Target, Flame, ChevronRight, Send, Receipt, Wallet,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useCountUp } from '../hooks/useCountUp';
@@ -57,18 +57,43 @@ export default function Dashboard() {
             </div>
           </div>
 
-          <div className="flex gap-3 mt-6">
-            <Button variant="gold" onClick={() => nav('/pay')} className="flex-1">
-              <ArrowUpRight className="h-4 w-4 mr-2" /> Send Money
+          {/* 3 ACTION BUTTONS */}
+          <div className="grid grid-cols-3 gap-3 mt-6">
+            <Button variant="gold" size="sm" onClick={() => nav('/pay')} className="flex flex-col items-center py-3 h-auto">
+              <ArrowUpRight className="h-4 w-4 mb-1" /> 
+              <span className="text-xs font-semibold">Send Money</span>
             </Button>
-            <Button variant="ghost" className="flex-1 !border-white/25 !text-sand-50" onClick={() => nav('/pay')}>
-              <ArrowDownLeft className="h-4 w-4 mr-2" /> Cash In
+            <Button variant="ghost" size="sm" className="flex flex-col items-center py-3 h-auto !border-white/25 !text-sand-50" onClick={() => nav('/pay')}>
+              <ArrowDownLeft className="h-4 w-4 mb-1" /> 
+              <span className="text-xs font-semibold">Cash In</span>
+            </Button>
+            <Button variant="ghost" size="sm" className="flex flex-col items-center py-3 h-auto !border-white/25 !text-sand-50" onClick={() => nav('/wallet')}>
+              <Wallet className="h-4 w-4 mb-1" /> 
+              <span className="text-xs font-semibold">View Wallet</span>
             </Button>
           </div>
         </div>
       </div>
 
-      {/* 2. QUICK ACTIONS GRID */}
+      {/* 2. CRITICAL METRICS (The missing pieces!) */}
+      <div className="grid grid-cols-3 gap-3">
+        <Card className="p-4 text-center flex flex-col items-center justify-center">
+          <p className="text-[10px] uppercase tracking-wider text-forest-700/60 dark:text-sand-100/50 font-bold">Total Savings</p>
+          <p className="mt-1 font-display text-lg font-bold text-forest-900 dark:text-sand-50">{fmtMoney(totalSavings, profile.currency)}</p>
+        </Card>
+        <Card className="p-4 text-center flex flex-col items-center justify-center">
+          <p className="text-[10px] uppercase tracking-wider text-forest-700/60 dark:text-sand-100/50 font-bold">Next Payout</p>
+          <p className="mt-1 font-display text-lg font-bold text-gold-600">{fmtDate(nextPayout?.nextPayout)}</p>
+          <p className="text-[10px] text-forest-700/50 truncate w-full">{nextPayout?.name || 'No active circle'}</p>
+        </Card>
+        <Card className="p-4 text-center flex flex-col items-center justify-center">
+          <p className="text-[10px] uppercase tracking-wider text-forest-700/60 dark:text-sand-100/50 font-bold">Trust Score</p>
+          <p className="mt-1 font-display text-lg font-bold text-teal-600">{trust.score}</p>
+          <p className="text-[10px] text-forest-700/50">{trust.level}</p>
+        </Card>
+      </div>
+
+      {/* 3. QUICK ACTIONS GRID */}
       <div className="grid grid-cols-4 gap-3">
         {[
           { label: 'Send', icon: Send, color: 'bg-gold-100 text-gold-600 dark:bg-gold-500/15 dark:text-gold-400', action: () => nav('/pay') },
@@ -101,7 +126,7 @@ export default function Dashboard() {
         </button>
       </Card>
 
-      {/* 3. ACTIVE CIRCLES CAROUSEL */}
+      {/* 4. ACTIVE CIRCLES CAROUSEL */}
       <div className="mt-2">
         <div className="flex items-center justify-between mb-4">
           <h3 className="font-display font-bold text-lg text-forest-900 dark:text-sand-50">Active Circles</h3>
