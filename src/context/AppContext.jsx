@@ -28,10 +28,31 @@ function reducer(state, action) {
     case 'TRUST': {
       const score = Math.max(0, Math.min(900, state.trust.score + action.delta));
       return { ...state, trust: { ...state.trust, score, level: trustLevel(score), history: [...state.trust.history, { date: new Date().toISOString(), score }].slice(-24) } };
-    }    case 'SEND_MONEY': {
+    }
+    case 'ADD_SAVINGS': return { ...state, savingsAccounts: [action.account, ...state.savingsAccounts] };
+    case 'UPDATE_SAVINGS': return { ...state, savingsAccounts: state.savingsAccounts.map((s) => (s.id === action.id ? { ...s, ...action.patch } : s)) };
+    case 'UPDATE_GROUP': return { ...state, groups: state.groups.map((g) => (g.id === action.id ? { ...g, ...action.patch } : g)) };
+    
+    // --- NEW: Add a brand new group to the list ---
+    case 'ADD_GROUP': {
+      return { ...state, groups: [action.group, ...state.groups] };
+    }
+    
+    case 'ADD_GROUP_ACTIVITY': return { ...state, groups: state.groups.map((g) => (g.id === action.id ? { ...g, activity: [{ date: new Date().toISOString(), text: action.text }, ...g.activity] } : g)) };
+    case 'ADVANCE_ROTATION': return { ...state, groups: state.groups.map((g) => (g.id === action.id ? { ...g, currentIndex: (g.currentIndex + 1) % g.rotation.length } : g)) };
+    case 'ADD_EMERGENCY': return { ...state, emergencyRequests: [action.item, ...state.emergencyRequests] };
+    case 'UPDATE_EMERGENCY': return { ...state, emergencyRequests: state.emergencyRequests.map((e) => (e.id === action.id ? { ...e, ...action.patch } : e)) };
+    case 'ADD_INVITATION': return { ...state, invitations: [action.item, ...state.invitations] };
+    case 'ADD_CHAT': return { ...state, chat: [...state.chat, action.item] };
+    case 'VOTE_POLL': return { ...state, polls: state.polls.map((p) => (p.id === action.id ? { ...p, options: p.options.map((o) => (o.id === action.opt ? { ...o, votes: o.votes + 1 } : o)) } : p)) };
+    case 'INVEST': return { ...state, investments: state.investments.map((iv) => (iv.id === action.id ? { ...iv, raised: iv.raised + action.amount, investors: iv.investors + 1 } : iv)) };
+    case 'SET_SETTINGS': return { ...state, settings: { ...state.settings, ...action.payload } };
+    
+    // --- NEW: Handle Sending Money (Deduct balance + fee) ---
+    case 'SEND_MONEY': {
       const { amount, fee, recipient, provider, purpose, isSmartSend, smartCategory } = action.payload;
       const totalDeduction = +(amount + fee).toFixed(2);
-      const newBalance = +(state.wallet.balance - totalDeduction).toFixed(2);
+      const newBalance = Math.max(0, +(state.wallet.balance - totalDeduction).toFixed(2));
       
       const newTxn = { 
         id: uid('tx'), type: 'send', amount: -totalDeduction, 
@@ -41,14 +62,16 @@ function reducer(state, action) {
       
       return {
         ...state,
-        wallet: { ...state.wallet, balance: newBalance, totalSent: state.wallet.totalSent + totalDeduction },
+        wallet: { ...state.wallet, balance: newBalance, totalSent: (state.wallet.totalSent || 0) + totalDeduction },
         transactions: [newTxn, ...state.transactions],
-        trust: { ...state.trust, score: Math.min(900, state.trust.score + 2) } // Bonus for successful sends
+        trust: { ...state.trust, score: Math.min(900, state.trust.score + 2) }
       };
     }
+
+    // --- NEW: Handle Paying Bills (Deduct balance) ---
     case 'PAY_BILL': {
       const { amount, provider, category } = action.payload;
-      const newBalance = +(state.wallet.balance - amount).toFixed(2);
+      const newBalance = Math.max(0, +(state.wallet.balance - amount).toFixed(2));
       
       const newTxn = { 
         id: uid('tx'), type: 'bill_pay', amount: -amount, 
@@ -61,18 +84,7 @@ function reducer(state, action) {
         transactions: [newTxn, ...state.transactions]
       };
     }
-    case 'ADD_SAVINGS': return { ...state, savingsAccounts: [action.account, ...state.savingsAccounts] };
-    case 'UPDATE_SAVINGS': return { ...state, savingsAccounts: state.savingsAccounts.map((s) => (s.id === action.id ? { ...s, ...action.patch } : s)) };
-    case 'UPDATE_GROUP': return { ...state, groups: state.groups.map((g) => (g.id === action.id ? { ...g, ...action.patch } : g)) };
-    case 'ADD_GROUP_ACTIVITY': return { ...state, groups: state.groups.map((g) => (g.id === action.id ? { ...g, activity: [{ date: new Date().toISOString(), text: action.text }, ...g.activity] } : g)) };
-    case 'ADVANCE_ROTATION': return { ...state, groups: state.groups.map((g) => (g.id === action.id ? { ...g, currentIndex: (g.currentIndex + 1) % g.rotation.length } : g)) };
-    case 'ADD_EMERGENCY': return { ...state, emergencyRequests: [action.item, ...state.emergencyRequests] };
-    case 'UPDATE_EMERGENCY': return { ...state, emergencyRequests: state.emergencyRequests.map((e) => (e.id === action.id ? { ...e, ...action.patch } : e)) };
-    case 'ADD_INVITATION': return { ...state, invitations: [action.item, ...state.invitations] };
-    case 'ADD_CHAT': return { ...state, chat: [...state.chat, action.item] };
-    case 'VOTE_POLL': return { ...state, polls: state.polls.map((p) => (p.id === action.id ? { ...p, options: p.options.map((o) => (o.id === action.opt ? { ...o, votes: o.votes + 1 } : o)) } : p)) };
-    case 'INVEST': return { ...state, investments: state.investments.map((iv) => (iv.id === action.id ? { ...iv, raised: iv.raised + action.amount, investors: iv.investors + 1 } : iv)) };
-    case 'SET_SETTINGS': return { ...state, settings: { ...state.settings, ...action.payload } };
+
     case 'APPLY_EVENT': {
       const ev = action.event;
       let s = state;
