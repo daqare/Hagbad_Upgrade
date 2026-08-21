@@ -7,10 +7,11 @@ import { Card, Button, Badge, Field, inputCls, Modal, DemoBadge } from '../compo
 import { fmtMoney, fmtDate, initials } from '../utils/format';
 import { uid } from '../utils/ids';
 import { Confetti } from '../components/Confetti';
-
+import CreateCircleWizard from '../components/CreateCircleWizard';
 const FREQ = ['Weekly', 'Bi-weekly', 'Monthly'];
 
 export default function Groups() {
+  const [showWizard, setShowWizard] = useState(false);
   const { state, dispatch, toast } = useApp();
   const { groups, profile } = state;
   const [selected, setSelected] = useState(groups[0]?.id);
@@ -62,7 +63,8 @@ export default function Groups() {
       {celebrate && <Confetti />}
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div><h1 className="font-display text-3xl font-bold">Hagbad Circles</h1><p className="mt-1 text-sm text-forest-700/60 dark:text-sand-100/50">Traditional rotating savings, made transparent.</p></div>
-        <DemoBadge />
+        <DemoBadge />    <Button variant="gold" onClick={() => setShowWizard(true)}> Create Circle
+   </Button>
       </div>
 
       <div className="flex gap-2 overflow-x-auto pb-1">
@@ -173,6 +175,7 @@ export default function Groups() {
           <div className="md:col-span-2 flex gap-3"><Button type="button" variant="ghost" className="flex-1" onClick={() => setEditOpen(false)}>Cancel</Button><Button type="submit" className="flex-1">Save changes</Button></div>
         </form>
       </Modal>
+         {showWizard && <CreateCircleWizard onClose={() => setShowWizard(false)} />}
     </div>
   );
 }
