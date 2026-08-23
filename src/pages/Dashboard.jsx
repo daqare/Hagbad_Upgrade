@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Users, CalendarDays, ShieldCheck, ArrowUpRight, ArrowDownLeft, HandCoins,
-  Zap, HeartHandshake, Target, Flame, ChevronRight, Send, Receipt, Wallet, Crown, TrendingUp, QrCode
+  Zap, HeartHandshake, Target, Flame, ChevronRight, Send, Receipt, Wallet, Crown, TrendingUp, QrCode, Globe
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useCountUp } from '../hooks/useCountUp';
@@ -15,6 +15,7 @@ import QardHasanModal from '../components/QardHasanModal';
 import ProUpgradeModal from '../components/ProUpgradeModal';
 import BusinessLedgerModal from '../components/BusinessLedgerModal';
 import ScanPayModal from '../components/ScanPayModal';
+import RegionSelectorModal from '../components/RegionSelectorModal';
 const MONTHLY = [
   { m: 'Mar', amount: 320 }, { m: 'Apr', amount: 380 }, { m: 'May', amount: 340 },
   { m: 'Jun', amount: 460 }, { m: 'Jul', amount: 420 }, { m: 'Aug', amount: 510 },
@@ -26,6 +27,7 @@ const CASHFLOW = [
 ];
 
 export default function Dashboard() {
+  const [showRegion, setShowRegion] = useState(false);
   const [showBusiness, setShowBusiness] = useState(false);
   const [showPro, setShowPro] = useState(false);
   const { state, dispatch } = useApp();
@@ -153,7 +155,8 @@ export default function Dashboard() {
           { label: 'Circles', icon: Users, color: 'bg-forest-100 text-forest-600 dark:bg-forest-500/15 dark:text-forest-400', action: () => nav('/groups') },
           { label: 'Smart', icon: Zap, color: 'bg-plum-100 text-plum-600 dark:bg-plum-500/15 dark:text-plum-400', action: () => nav('/pay') },
           { label: 'Loan', icon: HandCoins, color: 'bg-coral-100 text-coral-600 dark:bg-coral-500/15 dark:text-coral-400', action: () => setShowLoan(true) },
-        ].map((item) => (
+          { label: 'Region', icon: Globe, color: 'bg-plum-100 text-plum-600 dark:bg-plum-500/15 dark:text-plum-400', action: () => setShowRegion(true) },
+         ].map((item) => (
           <button key={item.label} onClick={item.action} className="flex flex-col items-center gap-2 p-3 rounded-2xl bg-white dark:bg-white/5 border border-forest-100 dark:border-white/10 hover:border-gold-400/60 transition">
             <div className={`h-10 w-10 rounded-xl grid place-items-center ${item.color}`}>
               <item.icon className="h-5 w-5" />
@@ -293,6 +296,7 @@ export default function Dashboard() {
       {showPro && <ProUpgradeModal onClose={() => setShowPro(false)} />}
       {showBusiness && <BusinessLedgerModal onClose={() => setShowBusiness(false)} />}
       {showScan && <ScanPayModal onClose={() => setShowScan(false)} />}
+      {showRegion && <RegionSelectorModal onClose={() => setShowRegion(false)} />}
     </div>
   );
 }
