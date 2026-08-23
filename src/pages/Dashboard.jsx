@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Users, CalendarDays, ShieldCheck, ArrowUpRight, ArrowDownLeft, HandCoins,
-  Zap, HeartHandshake, Target, Flame, ChevronRight, Send, Receipt, Wallet, Crown, TrendingUp
+  Zap, HeartHandshake, Target, Flame, ChevronRight, Send, Receipt, Wallet, Crown, TrendingUp, QrCode
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useCountUp } from '../hooks/useCountUp';
@@ -14,6 +14,7 @@ import { SomaliPattern } from '../components/SomaliPattern';
 import QardHasanModal from '../components/QardHasanModal';
 import ProUpgradeModal from '../components/ProUpgradeModal';
 import BusinessLedgerModal from '../components/BusinessLedgerModal';
+import ScanPayModal from '../components/ScanPayModal';
 const MONTHLY = [
   { m: 'Mar', amount: 320 }, { m: 'Apr', amount: 380 }, { m: 'May', amount: 340 },
   { m: 'Jun', amount: 460 }, { m: 'Jul', amount: 420 }, { m: 'Aug', amount: 510 },
@@ -29,6 +30,7 @@ export default function Dashboard() {
   const [showPro, setShowPro] = useState(false);
   const { state, dispatch } = useApp();
   const nav = useNavigate();
+  const [showScan, setShowScan] = useState(false);
   const balance = useCountUp(state.wallet.balance);
   const { profile, trust, groups, savingsAccounts, transactions, meta } = state;
   const [showLoan, setShowLoan] = useState(false);
@@ -145,6 +147,7 @@ export default function Dashboard() {
       {/* 3. QUICK ACTIONS GRID */}
       <div className="grid grid-cols-4 gap-3">
         {[
+          { label: 'Scan & Pay', icon: QrCode, color: 'bg-gold-100 text-gold-600 dark:bg-gold-500/15 dark:text-gold-400', action: () => setShowScan(true) },
           { label: 'Send', icon: Send, color: 'bg-gold-100 text-gold-600 dark:bg-gold-500/15 dark:text-gold-400', action: () => nav('/pay') },
           { label: 'Bills', icon: Receipt, color: 'bg-teal-100 text-teal-600 dark:bg-teal-500/15 dark:text-teal-400', action: () => nav('/pay') },
           { label: 'Circles', icon: Users, color: 'bg-forest-100 text-forest-600 dark:bg-forest-500/15 dark:text-forest-400', action: () => nav('/groups') },
@@ -289,6 +292,7 @@ export default function Dashboard() {
       {showLoan && <QardHasanModal onClose={() => setShowLoan(false)} />}
       {showPro && <ProUpgradeModal onClose={() => setShowPro(false)} />}
       {showBusiness && <BusinessLedgerModal onClose={() => setShowBusiness(false)} />}
+      {showScan && <ScanPayModal onClose={() => setShowScan(false)} />}
     </div>
   );
 }
