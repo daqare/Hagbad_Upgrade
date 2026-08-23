@@ -59,6 +59,12 @@ function reducer(state, action) {
     case 'INVEST': return { ...state, investments: state.investments.map((iv) => (iv.id === action.id ? { ...iv, raised: iv.raised + action.amount, investors: iv.investors + 1 } : iv)) };
     case 'SET_DASHBOARD_TAB': return { ...state, dashboardTab: action.tab };
     case 'SET_PRO': return { ...state, isPro: action.payload };
+    case 'SET_REGION_PREFERENCES': return { 
+        ...state, 
+        region: action.payload.region, 
+        currency: action.payload.currency, 
+        language: action.payload.language 
+      };
     case 'ADD_BUSINESS_TXN': { const newBizTxn = { id: uid('biz'), ...action.payload, date: new Date().toISOString() };
       return { ...state, businessLedger: [newBizTxn, ...(state.businessLedger || [])] };
     } 
